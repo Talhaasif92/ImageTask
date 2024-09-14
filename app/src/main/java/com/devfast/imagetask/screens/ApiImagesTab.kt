@@ -1,7 +1,10 @@
 package com.devfast.imagetask.screens
 
 import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,12 +21,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionResult
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.devfast.imagetask.ImageViewModel
+import com.devfast.imagetask.R
 import com.devfast.imagetask.networking.ImageApiClient
 import com.devfast.imagetask.model.PhotosItem
 
@@ -35,20 +46,22 @@ fun ApiImagesTab(imageViewModel: ImageViewModel) {
 
     LaunchedEffect(Unit) {
         try {
-            val response = ImageApiClient.imageService.searchPhotos("car",80)
+            val response = ImageApiClient.imageService.searchPhotos("house", 80)
             images = response.body()?.photos ?: emptyList()
             Log.d("ApiImagesTab", "Images: $images")
         } catch (e: Exception) {
             Log.d("ApiImagesTab E", "e: ${e.message}")
-
-            // Handle error
         } finally {
             isLoading = false
         }
     }
-
     if (isLoading) {
-        CircularProgressIndicator() // Example loading indicator
+        val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.loading_animation))
+        LottieAnimation(
+            composition = composition,
+            iterations = LottieConstants.IterateForever,
+            modifier = Modifier.fillMaxSize()
+        )
     } else {
         ImageList(images)
     }
@@ -62,26 +75,45 @@ fun ImageList(images: List<PhotosItem?>) {
     ) {
         items(images) { image ->
             image?.let {
-                Card(
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    var isImageLoaded by remember { mutableStateOf(false) }
-                    AsyncImage(
-                        model = it.src?.medium,
-                        contentDescription = it.alt,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1f)
-                            .alpha(if (isImageLoaded) 1f else 0f), // Fade in effect
-                        contentScale = ContentScale.Crop,
-                        onSuccess = { isImageLoaded = true } // Image loaded
-                    )}
+                ImageListItem(imageUrl = it.src?.medium, contentDescription = it.alt)
             }
         }
     }
 }
 
+@Composable
+fun ImageListItem(imageUrl: String?, contentDescription: String?) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        var isImageLoaded by remember { mutableStateOf(false) }
 
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.background(colorResource(id = R.color.white))
+        ) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = contentDescription,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .alpha(if (isImageLoaded) 1f else 0f),
+                contentScale = ContentScale.Crop,
+                onSuccess = { isImageLoaded = true }
+            )
+
+            if (!isImageLoaded) {
+                val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.loading_animation))
+                LottieAnimation(
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+    }
+}
