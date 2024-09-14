@@ -72,4 +72,8 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.retrofit2.kotlin.coroutines.adapter)
     implementation(libs.lottie.compose)
+    implementation (libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.runtime.ktx)
+
+
 }

@@ -11,9 +11,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
 import com.devfast.imagetask.screens.ApiImagesTab
 import com.devfast.imagetask.screens.CameraImagesTab
 import com.devfast.imagetask.screens.SavedImagesTab
@@ -21,10 +21,10 @@ import com.devfast.imagetask.screens.StorageImagesTab
 import kotlinx.coroutines.launch
 
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HorizontalPagerScreen(imageViewModel: ImageViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
+    val navControllerBar = rememberNavController()
     val data = listOf("API", "Storage", "Camera", "Saved")
     val numPages = data.size
     val pagerState = rememberPagerState(0, 0F) { numPages }
@@ -37,10 +37,10 @@ fun HorizontalPagerScreen(imageViewModel: ImageViewModel = viewModel()) {
             if (page in 0 until numPages) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     when (page) {
-                        0 -> ApiImagesTab(imageViewModel)
-                        1 -> StorageImagesTab(imageViewModel)
-                        2 -> CameraImagesTab(imageViewModel)
-                        3 -> SavedImagesTab(imageViewModel)
+                        0 -> ApiImagesTab(imageViewModel,navControllerBar)
+                        1 -> StorageImagesTab(imageViewModel,navControllerBar)
+                        2 -> CameraImagesTab(imageViewModel,navControllerBar)
+                        3 -> SavedImagesTab(imageViewModel,navControllerBar)
                     }
                 }
             }
@@ -71,27 +71,8 @@ fun HorizontalPagerScreen(imageViewModel: ImageViewModel = viewModel()) {
             }
 
             Row {
-                bottomNavigation()
+
             }
         }
     }
-}
-
-@Composable
-fun bottomNavigation() {
-
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row {
-                    Modifier
-                        .fillMaxWidth()
-                        .background(Color.Red)
-                }
-            }
-        }
 }

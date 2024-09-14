@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionResult
@@ -40,7 +41,7 @@ import com.devfast.imagetask.model.PhotosItem
 
 
 @Composable
-fun ApiImagesTab(imageViewModel: ImageViewModel) {
+fun ApiImagesTab(imageViewModel: ImageViewModel, navController: NavHostController) {
     var images by remember { mutableStateOf<List<PhotosItem?>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
