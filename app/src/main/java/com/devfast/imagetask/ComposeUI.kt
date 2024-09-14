@@ -14,6 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.devfast.imagetask.screens.ApiImagesTab
+import com.devfast.imagetask.screens.CameraImagesTab
+import com.devfast.imagetask.screens.SavedImagesTab
+import com.devfast.imagetask.screens.StorageImagesTab
 import kotlinx.coroutines.launch
 
 
@@ -44,23 +48,28 @@ fun HorizontalPagerScreen(imageViewModel: ImageViewModel = viewModel()) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(bottom = 20.dp)
+                .padding(bottom = 10.dp)
                 .align(Alignment.BottomCenter),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(onClick = {
-                scope.launch {
-                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
+            Row {
+                Button(onClick = {
+                    scope.launch {
+                        pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                    }
+                }) {
+                    Text(text = "Back")
                 }
-            }) {
-                Text(text = "Next")
+
+                Button(onClick = {
+                    scope.launch {
+                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                    }
+                }) {
+                    Text(text = "Next")
+                }
             }
 
-//            Row {
-//                repeat(numPages) {
-//                    CustomIndicator(selected = pagerState.currentPage == it)
-//                }
-//            }
             Row {
                 bottomNavigation()
             }
@@ -79,39 +88,10 @@ fun bottomNavigation() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row {
-                    Modifier.fillMaxWidth().background(Color.Red)
+                    Modifier
+                        .fillMaxWidth()
+                        .background(Color.Red)
                 }
             }
         }
-}
-
-@Composable
-fun ApiImagesTab(viewModel: ImageViewModel) {
-    // Placeholder for API images
-    Text(text = "API Images", modifier = Modifier.padding(16.dp))
-}
-
-@Composable
-fun StorageImagesTab(viewModel: ImageViewModel) {
-    // Placeholder for Storage images
-    Text(text = "Storage Images", modifier = Modifier.padding(16.dp))
-}
-
-@Composable
-fun CameraImagesTab(viewModel: ImageViewModel) {
-    // Placeholder for Camera images
-    Text(text = "Camera Images", modifier = Modifier.padding(16.dp))
-}
-
-@Composable
-fun SavedImagesTab(viewModel: ImageViewModel) {
-    // Placeholder for Saved images
-    Text(text = "Saved Images", modifier = Modifier.padding(16.dp))
-}
-
-
-@Preview
-@Composable
-fun PreviewHorizontalPagerScreen() {
-    HorizontalPagerScreen()
 }
