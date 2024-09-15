@@ -3,6 +3,7 @@ package com.devfast.imagetask.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -47,69 +48,90 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
     val images by imageViewModel.images.collectAsState() // Use collectAsState to get the images
     val numPages = images.size
     val pagerState = rememberPagerState(initialPage = imageIndex) { numPages }
-    HorizontalPager(
-        state = pagerState,
-        modifier = Modifier.fillMaxWidth()
-    ) { page ->
-        Card(
-            modifier = Modifier
-                .padding(4.dp)
-                .fillMaxSize(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            var isImageLoaded by remember { mutableStateOf(false) }
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.background(colorResource(id = R.color.white))
-            ) {
-                AsyncImage(
-                    model = images[page]?.src?.medium,
-                    contentDescription = images[page]?.alt,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .aspectRatio(1f)
-                        .alpha(if (isImageLoaded) 1f else 0f),
-                    contentScale = ContentScale.Crop,
-                    onSuccess = { isImageLoaded = true }
-                )
 
-                if (!isImageLoaded) {
-                    val composition by rememberLottieComposition(
-                        spec = LottieCompositionSpec.RawRes(
-                            R.raw.loading_animation
+    // Use Column to position items vertically
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f) // Take up available space in the middle
+        ) { page ->
+            Card(
+                modifier = Modifier
+                    .padding(4.dp)
+                    .fillMaxSize(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                var isImageLoaded by remember { mutableStateOf(false) }
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.background(colorResource(id = R.color.white))
+                ) {
+                    AsyncImage(
+                        model = images[page]?.src?.medium,
+                        contentDescription = images[page]?.alt,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .aspectRatio(1f)
+                            .alpha(if (isImageLoaded) 1f else 0f),
+                        contentScale = ContentScale.Crop,
+                        onSuccess = { isImageLoaded = true }
+                    )
+
+                    if (!isImageLoaded) {
+                        val composition by rememberLottieComposition(
+                            spec = LottieCompositionSpec.RawRes(
+                                R.raw.loading_animation
+                            )
                         )
-                    )
-                    LottieAnimation(
-                        composition = composition,
-                        iterations = LottieConstants.IterateForever,
-                        modifier = Modifier.size(100.dp) // Adjust size as needed
-                    )
+                        LottieAnimation(
+                            composition = composition,
+                            iterations = LottieConstants.IterateForever,
+                            modifier = Modifier.size(100.dp) // Adjust size as needed
+                        )
+                    }
                 }
+            }
+        }
+
+        // Spacer to push the buttons to the bottom
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // First row of buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Button(onClick = { /* Save current image */ }) {
+                Text("Save Image")
+            }
+            Button(onClick = { /* Compress current image */ }) {
+                Text("Compress Image")
+            }
+        }
+
+        // Second row of buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Button(onClick = { /* Save all images */ }) {
+                Text("Save All Images")
+            }
+            Button(onClick = { /* Compress all images */ }) {
+                Text("Compress All Images")
             }
         }
     }
 
-    Spacer(modifier = Modifier.height(16.dp))
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        Button(onClick = { /* Save current image */ }) {
-            Text("Save Image")
-        }
-        Button(onClick = { /* Compress current image */ }) {
-            Text("Compress Image")
-        }
-        Button(onClick = { /* Save all images */ }) {
-            Text("Save All Images")
-        }
-        Button(onClick = { /* Compress all images */ }) {
-            Text("Compress All Images")
-        }
-    }
-
-    LaunchedEffect(pagerState) {// Collect from pagerState.currentPage
+    LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
             currentIndex = page
         }
