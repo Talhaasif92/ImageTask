@@ -9,9 +9,8 @@ import androidx.navigation.NavHostController
 import com.devfast.imagetask.ImageViewModel
 
 
-
 @Composable
-fun SavedImagesTab(viewModel: ImageViewModel, navController: NavHostController) {
-    // Placeholder for Saved images
-    Text(text = "Saved Images", modifier = Modifier.padding(16.dp))
+fun CameraScreen(imageViewModel: ImageViewModel, navController: NavHostController) {
+    // Placeholder for Camera images
+    Text(text = "Camera Images", modifier = Modifier.padding(16.dp))
 }

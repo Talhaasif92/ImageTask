@@ -10,7 +10,7 @@ import com.devfast.imagetask.ImageViewModel
 
 
 @Composable
-fun CameraImagesTab(viewModel: ImageViewModel, navController: NavHostController) {
-    // Placeholder for Camera images
-    Text(text = "Camera Images", modifier = Modifier.padding(16.dp))
+fun StorageScreen(imageViewModel: ImageViewModel, navController: NavHostController) {
+    // Placeholder for Storage images
+    Text(text = "Storage Images", modifier = Modifier.padding(16.dp))
 }

@@ -9,8 +9,9 @@ import androidx.navigation.NavHostController
 import com.devfast.imagetask.ImageViewModel
 
 
+
 @Composable
-fun StorageImagesTab(viewModel: ImageViewModel, navController: NavHostController) {
-    // Placeholder for Storage images
-    Text(text = "Storage Images", modifier = Modifier.padding(16.dp))
+fun SavedImageScreen(imageViewModel: ImageViewModel, navController: NavHostController) {
+    // Placeholder for Saved images
+    Text(text = "Saved Images", modifier = Modifier.padding(16.dp))
 }
