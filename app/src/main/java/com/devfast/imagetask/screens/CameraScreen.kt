@@ -103,8 +103,9 @@ fun CameraPreview(
             onClick = {
                 val file = createImageFile(context)
                 captureImage(context, imageCapture, file) { uri ->
+                    val encodedUri = Uri.encode(uri.toString())  // Encode the URI
                     imageViewModel.setSelectedImageUrl(uri.toString())
-                    navController.navigate(Screen.ImageEditScreen.route)
+                    navController.navigate(Screen.ImageEditScreen.route + "/$encodedUri")  // Use encoded URI
                 }
             },
             modifier = Modifier.padding(16.dp)

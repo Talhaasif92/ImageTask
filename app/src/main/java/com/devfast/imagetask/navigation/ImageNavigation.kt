@@ -1,6 +1,7 @@
 package com.devfast.imagetask.navigation
 
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -18,6 +19,7 @@ import androidx.navigation.navArgument
 import com.devfast.imagetask.ImageViewModel
 import com.devfast.imagetask.screens.ApiScreen
 import com.devfast.imagetask.screens.CameraScreen
+import com.devfast.imagetask.screens.ImageEditScreen
 import com.devfast.imagetask.screens.SavedImageScreen
 import com.devfast.imagetask.screens.StorageScreen
 import com.devfast.imagetask.screens.ViewPagerScreen
@@ -61,6 +63,7 @@ private fun BottomNavHost(
         composable(Screen.StorageScreen.route) {
             StorageScreen(imageViewModel = imageViewModel, navController = navController)
         }
+
         composable(Screen.CameraScreen.route) {
             CameraScreen(imageViewModel = imageViewModel, navController = navController)
         }
@@ -73,6 +76,14 @@ private fun BottomNavHost(
         ) {
             val imageIndex = it.arguments?.getInt("imageIndex")
             ViewPagerScreen(imageViewModel = imageViewModel, navController = navController, imageIndex = imageIndex ?: 0)
+        }
+
+        composable(
+            route = Screen.ImageEditScreen.route + "/{filePath}",
+            arguments = listOf(navArgument("filePath") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val filePath = Uri.decode(backStackEntry.arguments?.getString("filePath") ?: "")
+            ImageEditScreen(imageViewModel = imageViewModel, navController = navController, filePath = filePath ?: "")
         }
     }
 }
