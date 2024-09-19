@@ -63,7 +63,7 @@ fun ApiScreen(imageViewModel: ImageViewModel, navController: NavHostController) 
         ImageList(
             images = images,
             onImageClick = {
-                navController.navigate(Screen.ViewPagerScreen.route + "/$it") // Navigate to ViewPagerScreen
+                navController.navigate(Screen.ViewPagerScreen.route + "/$it")
             },
             onSearchImage = {
                 imageViewModel.fetchImages(it)

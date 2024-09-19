@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.devfast.imagetask.model.PhotosItem
@@ -24,6 +25,14 @@ class ImageViewModel : ViewModel() {
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+    var selectedImageUrl = mutableStateOf<String?>(null)
+
+    // Function to update the selected image URL
+    fun setSelectedImageUrl(url: String) {
+        selectedImageUrl.value = url
+    }
+
 
     init {
         fetchImages()

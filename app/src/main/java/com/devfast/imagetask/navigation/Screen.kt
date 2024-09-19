@@ -11,6 +11,7 @@ sealed class Screen(val route: String) {
     data object CameraScreen : Screen("CameraScreen")
     data object SaveImageScreen : Screen("SaveImageScreen")
     data object ViewPagerScreen : Screen("ViewPagerScreen")
+    data object ImageEditScreen : Screen("ImageEditScreen")
 }
 
 class ImageNavigationActions(private val navController: NavHostController) {

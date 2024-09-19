@@ -9,6 +9,7 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -17,9 +18,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -36,7 +39,7 @@ import java.io.OutputStream
 
 @Composable
 fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewModel, imageIndex: Int) {
-    var currentIndex by remember { mutableStateOf(imageIndex) }
+    var currentIndex by remember { mutableIntStateOf(imageIndex) }
     val images by imageViewModel.images.collectAsState()
     val numPages = images.size
     val pagerState = rememberPagerState(initialPage = imageIndex) { numPages }
@@ -61,17 +64,61 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Button(onClick = { selectedFilter = "None" }, modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
-                Text("No Filter")
+            Button(
+                onClick = { selectedFilter = "None" },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+                    .height(40.dp)
+            ) {
+                Text(
+                    "No-Filter",
+                    maxLines = 1, // Limit to one line
+                    softWrap = true,
+                    style = TextStyle(fontSize = 12.sp) // Set a base text size
+                )
             }
-            Button(onClick = { selectedFilter = "Sepia" }, modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
-                Text("Sepia")
+            Button(
+                onClick = { selectedFilter = "Sepia" },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+                    .height(40.dp)
+            ) {
+                Text(
+                    "Sepia",
+                    maxLines = 1,
+                    softWrap = true,
+                    style = TextStyle(fontSize = 12.sp)
+                )
             }
-            Button(onClick = { selectedFilter = "Grayscale" }, modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
-                Text("Grayscale")
+            Button(
+                onClick = { selectedFilter = "Grayscale" },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+                    .height(40.dp)
+            ) {
+                Text(
+                    "Grayscale",
+                    maxLines = 1,
+                    softWrap = true,
+                    style = TextStyle(fontSize = 12.sp)
+                )
             }
-            Button(onClick = { selectedFilter = "Vintage" }, modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
-                Text("Vintage")
+            Button(
+                onClick = { selectedFilter = "Vintage" },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+                    .height(40.dp)
+            ) {
+                Text(
+                    "Vintage",
+                    maxLines = 1,
+                    softWrap = true,
+                    style = TextStyle(fontSize = 12.sp)
+                )
             }
         }
 
@@ -81,20 +128,27 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                 .fillMaxWidth()
                 .weight(1f)
         ) { page ->
+            var isImageLoaded by remember { mutableStateOf(false) }
+            var filteredImage by remember { mutableStateOf<ImageBitmap?>(null) }
+
             Card(
                 modifier = Modifier
                     .padding(4.dp)
                     .fillMaxSize()
             ) {
-                var isImageLoaded by remember { mutableStateOf(false) }
-
                 LaunchedEffect(selectedFilter, images[page]) {
-                    filteredImage = applyFilter(
-                        context = context,
-                        imageUrl = images[page]?.src?.original,
-                        filterType = selectedFilter
-                    )
-                    isImageLoaded = true
+                    // Ensure we only apply the filter if it's not already loaded for the current page
+                    if (filteredImage == null || page != currentIndex) {
+                        Log.d("showData", "show data")
+                        filteredImage = applyFilter(
+                            context = context,
+                            imageUrl = images[page]?.src?.original,
+                            filterType = selectedFilter
+                        )
+
+                        currentIndex = page
+                        isImageLoaded = true
+                    }
                 }
 
                 Box(
@@ -103,7 +157,7 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                 ) {
                     filteredImage?.let {
                         Image(
-                            bitmap = it.asImageBitmap(),
+                            bitmap = it,
                             contentDescription = "Filtered Image",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
@@ -117,55 +171,105 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
             }
         }
 
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(onClick = {
-                filteredImage?.let {
-                    saveImage(context, it, "FilteredImage_${currentIndex + 1}.jpg")
-                }
-            }, modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
-                Text("Save Image")
+            Button(
+                onClick = {
+                    filteredImage?.let {
+                        saveImage(context, it, "FilteredImage_${currentIndex + 1}.jpg")
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+            ) {
+                Text(
+                    "Save",
+                    maxLines = 1,
+                    softWrap = true,
+                    style = TextStyle(fontSize = 12.sp) // Adjust as necessary
+                )
             }
-            Button(onClick = {
-                filteredImage?.let {
-                    compressImage(context, it, "CompressedImage_${currentIndex + 1}.jpg")
-                }
-            }, modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
-                Text("Compress Image")
+            Button(
+                onClick = {
+                    filteredImage?.let {
+                        compressImage(context, it, "CompressedImage_${currentIndex + 1}.jpg")
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+            ) {
+                Text(
+                    "Compress",
+                    maxLines = 1,
+                    softWrap = true,
+                    style = TextStyle(fontSize = 12.sp)
+                )
             }
-            Button(onClick = {
-                // Launch a coroutine to handle saving all images
-                coroutineScope.launch {
-                    saveAllImages(context, images, "FilteredImage")
-                }
-            }, modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
-                Text("Save All Images")
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        saveAllImages(context, images, "FilteredImage")
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+            ) {
+                Text(
+                    "Save-All",
+                    maxLines = 1,
+                    softWrap = true,
+                    style = TextStyle(fontSize = 12.sp)
+                )
             }
-            Button(onClick = {
-                // Launch a coroutine to handle compressing all images
-                coroutineScope.launch {
-                    compressAllImages(context, images, "CompressedImage")
-                }
-            }, modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
-                Text("Compress All Images")
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        compressAllImages(context, images, "CompressedImage")
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp)
+            ) {
+                Text(
+                    "Compress-All",
+                    maxLines = 1,
+                    softWrap = true,
+                    style = TextStyle(fontSize = 12.sp)
+                )
             }
         }
+
     }
 }
+// Cache to store previously filtered images
+val imageCache = mutableMapOf<Pair<String?, String>, Bitmap?>()
 
-suspend fun applyFilter(context: Context, imageUrl: String?, filterType: String): Bitmap? {
+suspend fun applyFilter(context: Context, imageUrl: String?, filterType: String): ImageBitmap? {
+    // Check cache first to avoid reprocessing the image with the same filter
+    val cacheKey = Pair(imageUrl, filterType)
+    imageCache[cacheKey]?.let {
+        return it.asImageBitmap() // Return cached image if already processed
+    }
+
     val loader = ImageLoader(context)
     val request = ImageRequest.Builder(context)
         .data(imageUrl)
         .build()
-    val result = (loader.execute(request) as SuccessResult).drawable
 
+    val result = (loader.execute(request) as SuccessResult).drawable
     val bitmap = (result as android.graphics.drawable.BitmapDrawable).bitmap
-    return withContext(Dispatchers.Default) {
+
+    // Process the image and apply the selected filter
+    val filteredBitmap = withContext(Dispatchers.Default) {
         when (filterType) {
             "Sepia" -> applySepiaFilter(bitmap)
             "Grayscale" -> applyGrayscaleFilter(bitmap)
@@ -173,7 +277,13 @@ suspend fun applyFilter(context: Context, imageUrl: String?, filterType: String)
             else -> bitmap
         }
     }
+
+    // Store the processed image in the cache for future reuse
+    imageCache[cacheKey] = filteredBitmap
+
+    return filteredBitmap.asImageBitmap()
 }
+
 
 fun applySepiaFilter(source: Bitmap): Bitmap {
     val sepiaMatrix = ColorMatrix().apply {
