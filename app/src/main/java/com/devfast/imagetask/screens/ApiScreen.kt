@@ -46,27 +46,39 @@ fun ApiScreen(imageViewModel: ImageViewModel, navController: NavHostController) 
     var isLoading by remember { mutableStateOf(false) }
 
     // Display initial skeleton grid while waiting for images
-    val skeletonCount = 6
+    val skeletonCount = 12
 
     // Trigger loading when images are being fetched
     LaunchedEffect(images) {
         isLoading = images.isEmpty()
     }
 
-    // Show skeleton or loader while waiting
-    if (isLoading) {
-        SkeletonImageList(skeletonCount)
-    } else {
-        ImageList(
-            images = images,
-            onImageClick = {
-                navController.navigate(Screen.ViewPagerScreen.route + "/$it")
-            },
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp) // Adds padding around the column
+    ) {
+        // Show the TextField first, regardless of the loading state
+        ImageSearchBar(
             onSearchImage = { query ->
                 isLoading = true // Show loader when search starts
                 imageViewModel.fetchImages(query)
             }
         )
+
+        Spacer(modifier = Modifier.height(8.dp)) // Adds space between the search bar and the list
+
+        // Show skeleton or loader while waiting
+        if (isLoading) {
+            SkeletonImageList(skeletonCount)
+        } else {
+            ImageList(
+                images = images,
+                onImageClick = {
+                    navController.navigate(Screen.ViewPagerScreen.route + "/$it")
+                }
+            )
+        }
     }
 }
 
@@ -76,7 +88,7 @@ fun SkeletonImageList(count: Int) {
         columns = StaggeredGridCells.Fixed(2),
         verticalItemSpacing = 4.dp,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp),
         content = {
             items(count) {
                 Box(
@@ -91,60 +103,59 @@ fun SkeletonImageList(count: Int) {
 }
 
 @Composable
-fun ImageList(
-    images: List<PhotosItem?>,
-    onImageClick: (Int) -> Unit,
-    onSearchImage: (String) -> Unit
-) {
+fun ImageSearchBar(onSearchImage: (String) -> Unit) {
     var searchQuery by rememberSaveable {
         mutableStateOf("")
     }
-    Column {
-        TextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp)
-                .border(width = 1.dp, color = Color.White),
-            value = searchQuery,
-            onValueChange = {
-                searchQuery = it
-            },
-            placeholder = { Text(text = "Search Image") },
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Search
-            ),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    onSearchImage(searchQuery)
-                    searchQuery = "" // Clear search field after the search
-                }
-            )
+    TextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 10.dp)
+            .border(width = 1.dp, color = Color.White),
+        value = searchQuery,
+        onValueChange = {
+            searchQuery = it
+        },
+        placeholder = { Text(text = "Search Image") },
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Search
+        ),
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                onSearchImage(searchQuery)
+                searchQuery = "" // Clear search field after the search
+            }
         )
-        Spacer(modifier = Modifier.height(10.dp))
+    )
+}
 
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(2),
-            verticalItemSpacing = 4.dp,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            content = {
-                items(images) { photo ->
-                    AsyncImage(
-                        model = photo?.src?.medium ?: photo?.src?.small, // Fetch smaller image if available
-                        placeholder = painterResource(id = R.drawable.loading_image), // Show placeholder while loading
-                        error = painterResource(id = R.drawable.image_error), // Show error image if loading fails
-                        contentScale = ContentScale.Crop,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .clickable {
-                                val imageIndex = images.indexOf(photo)
-                                onImageClick(imageIndex)
-                            }
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxSize()
-        )
-    }
+@Composable
+fun ImageList(
+    images: List<PhotosItem?>,
+    onImageClick: (Int) -> Unit
+) {
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Fixed(2),
+        verticalItemSpacing = 4.dp,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        content = {
+            items(images) { photo ->
+                AsyncImage(
+                    model = photo?.src?.medium ?: photo?.src?.small, // Fetch smaller image if available
+                    placeholder = painterResource(id = R.drawable.loading_image), // Show placeholder while loading
+                    error = painterResource(id = R.drawable.image_error), // Show error image if loading fails
+                    contentScale = ContentScale.Crop,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .clickable {
+                            val imageIndex = images.indexOf(photo)
+                            onImageClick(imageIndex)
+                        }
+                )
+            }
+        },
+        modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp)
+    )
 }

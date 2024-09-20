@@ -54,7 +54,7 @@ val BOTTOM_MENU_LIST = listOf(
     BottomNavigationItem(
         title = "Saved",
         route = Screen.SaveImageScreen.route,
-        selectedIcon = R.drawable.camera,
-        unselectedIcon = R.drawable.camera
+        selectedIcon = R.drawable.ic_folder,
+        unselectedIcon = R.drawable.ic_folder
     ),
 )

@@ -202,10 +202,9 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                         permissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     } else {
                         coroutineScope.launch {
+                            // Use filteredImage if a filter is applied, else use the original image
                             val bitmapToSave = filteredImage ?: images[currentIndex]?.src?.original?.let {
-                                getBitmapFromUrl(context,
-                                    it
-                                )
+                                getBitmapFromUrl(context, it)
                             }
                             bitmapToSave?.let {
                                 saveImage(context, it, "Image_${currentIndex + 1}.jpg")
@@ -221,14 +220,20 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                     "Save",
                     maxLines = 1,
                     softWrap = true,
-                    style = TextStyle(fontSize = 12.sp) // Adjust as necessary
+                    style = TextStyle(fontSize = 12.sp)
                 )
             }
 
             Button(
                 onClick = {
-                    filteredImage?.let {
-                        compressImage(context, it, "CompressedImage_${currentIndex + 1}.jpg")
+                    coroutineScope.launch {
+                        // Use filteredImage if a filter is applied, else use the original image
+                        val bitmapToCompress = filteredImage ?: images[currentIndex]?.src?.original?.let {
+                            getBitmapFromUrl(context, it)
+                        }
+                        bitmapToCompress?.let {
+                            compressImage(context, it, "CompressedImage_${currentIndex + 1}.jpg")
+                        } ?: Toast.makeText(context, "Image not found", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier
@@ -242,16 +247,29 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                     style = TextStyle(fontSize = 12.sp)
                 )
             }
+
             Button(
                 onClick = {
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
                         ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
+                        // Launch permission request if necessary
                         permissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    } else {coroutineScope.launch {
-                        saveAllImages(context, images, "FilteredImage")
-                    }
+                    } else {
+                        coroutineScope.launch {
+                            images.forEachIndexed { index, imageItem ->
+                                // Handle each image in the list, saving either filteredImage or original image
+                                val bitmapToSave = filteredImage ?: imageItem?.src?.original?.let {
+                                    getBitmapFromUrl(context, it)
+                                }
+
+                                // Save the bitmap if it exists
+                                bitmapToSave?.let {
+                                    saveAllImages(context, it, "FilteredImage_${index + 1}.jpg")
+                                } ?: Toast.makeText(context, "Image not found at index $index", Toast.LENGTH_SHORT).show()
+                            }
                         }
+                    }
                 },
                 modifier = Modifier
                     .weight(1f)
@@ -264,10 +282,21 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                     style = TextStyle(fontSize = 12.sp)
                 )
             }
+
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        compressAllImages(context, images, "CompressedImage")
+                        images.forEachIndexed { index, imageItem ->
+                            // Handle each image in the list, compressing either filteredImage or original image
+                            val bitmapToCompress = filteredImage ?: imageItem?.src?.original?.let {
+                                getBitmapFromUrl(context, it)
+                            }
+
+                            // Compress the bitmap if it exists
+                            bitmapToCompress?.let {
+                                compressImage(context, it, "CompressedImage_${index + 1}.jpg")
+                            } ?: Toast.makeText(context, "Image not found at index $index", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 },
                 modifier = Modifier
@@ -281,6 +310,7 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                     style = TextStyle(fontSize = 12.sp)
                 )
             }
+
         }
 
     }
