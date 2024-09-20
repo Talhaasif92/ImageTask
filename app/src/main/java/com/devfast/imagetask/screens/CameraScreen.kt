@@ -36,7 +36,6 @@ fun CameraScreen(imageViewModel: ImageViewModel, navController: NavHostControlle
     val lifecycleOwner = LocalContext.current as LifecycleOwner
     val cameraPermissionGranted = remember { mutableStateOf(false) }
 
-    // Request camera permission
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { granted ->
@@ -49,7 +48,6 @@ fun CameraScreen(imageViewModel: ImageViewModel, navController: NavHostControlle
     }
 
     if (cameraPermissionGranted.value) {
-        // Show CameraX Preview and Capture Image
         CameraPreview(context, lifecycleOwner, imageViewModel, navController)
     } else {
         Text(text = "Camera permission is required to take pictures", modifier = Modifier.padding(16.dp))
@@ -66,7 +64,6 @@ fun CameraPreview(
     var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-        // Setup Camera Preview
         AndroidView(
             factory = { viewContext ->
                 val previewView = androidx.camera.view.PreviewView(viewContext)
@@ -98,7 +95,6 @@ fun CameraPreview(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Button to take picture
         Button(
             onClick = {
                 val file = createImageFile(context)
@@ -115,7 +111,6 @@ fun CameraPreview(
     }
 }
 
-// Function to capture the image
 fun captureImage(
     context: Context,
     imageCapture: ImageCapture?,
@@ -131,7 +126,7 @@ fun captureImage(
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                 val savedUri = Uri.fromFile(file)
                 onImageCaptured(savedUri)
-            }
+                }
 
             override fun onError(exception: ImageCaptureException) {
                 exception.printStackTrace()

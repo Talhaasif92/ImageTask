@@ -47,9 +47,6 @@ fun StorageScreen(imageViewModel: ImageViewModel, navController: NavHostControll
             items(galleryImages.size) { index ->
                 val imageUrl = galleryImages[index]
                 ImageThumbnail(imageUrl = imageUrl) {
-                    // Navigate to the editing screen when an image is clicked
-//                    imageViewModel.selectedImageUrl = imageUrl
-                    navController.navigate(Screen.ImageEditScreen.route)
                     val encodedUri = Uri.encode(imageUrl)  // Encode the URI
                     imageViewModel.setSelectedImageUrl(imageUrl)
                     navController.navigate(Screen.ImageEditScreen.route + "/$encodedUri")  // Use encoded URI

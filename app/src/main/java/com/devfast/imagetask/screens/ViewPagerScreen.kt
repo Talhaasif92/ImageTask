@@ -2,14 +2,19 @@ package com.devfast.imagetask.screens
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
+import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -25,9 +30,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import coil.ImageLoader
-import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.devfast.imagetask.ImageViewModel
@@ -50,6 +55,18 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
     // Get CoroutineScope
     val coroutineScope = rememberCoroutineScope()
 
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted: Boolean ->
+            if (isGranted) {
+                filteredImage?.let {
+                    saveImage(context, it, "FilteredImage_${currentIndex + 1}.jpg")
+                }
+            } else {
+                Toast.makeText(context, "Permission denied, cannot save image", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -73,9 +90,9 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
             ) {
                 Text(
                     "No-Filter",
-                    maxLines = 1, // Limit to one line
+                    maxLines = 1,
                     softWrap = true,
-                    style = TextStyle(fontSize = 12.sp) // Set a base text size
+                    style = TextStyle(fontSize = 12.sp)
                 )
             }
             Button(
@@ -137,7 +154,6 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                     .fillMaxSize()
             ) {
                 LaunchedEffect(selectedFilter, images[page]) {
-                    // Ensure we only apply the filter if it's not already loaded for the current page
                     if (filteredImage == null || page != currentIndex) {
                         Log.d("showData", "show data")
                         filteredImage = applyFilter(
@@ -180,8 +196,15 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
         ) {
             Button(
                 onClick = {
-                    filteredImage?.let {
-                        saveImage(context, it, "FilteredImage_${currentIndex + 1}.jpg")
+
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+                        ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+                        permissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    } else {
+                        filteredImage?.let {
+                            saveImage(context, it, "FilteredImage_${currentIndex + 1}.jpg")
+                        }
                     }
                 },
                 modifier = Modifier
@@ -214,9 +237,14 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
             }
             Button(
                 onClick = {
-                    coroutineScope.launch {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+                        ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+                        permissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    } else {coroutineScope.launch {
                         saveAllImages(context, images, "FilteredImage")
                     }
+                        }
                 },
                 modifier = Modifier
                     .weight(1f)
@@ -253,7 +281,7 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
 // Cache to store previously filtered images
 val imageCache = mutableMapOf<Pair<String?, String>, Bitmap?>()
 
-suspend fun applyFilter(context: Context, imageUrl: String?, filterType: String): ImageBitmap? {
+suspend fun applyFilter(context: Context, imageUrl: String?, filterType: String): ImageBitmap {
     // Check cache first to avoid reprocessing the image with the same filter
     val cacheKey = Pair(imageUrl, filterType)
     imageCache[cacheKey]?.let {
@@ -268,7 +296,6 @@ suspend fun applyFilter(context: Context, imageUrl: String?, filterType: String)
     val result = (loader.execute(request) as SuccessResult).drawable
     val bitmap = (result as android.graphics.drawable.BitmapDrawable).bitmap
 
-    // Process the image and apply the selected filter
     val filteredBitmap = withContext(Dispatchers.Default) {
         when (filterType) {
             "Sepia" -> applySepiaFilter(bitmap)
@@ -330,6 +357,7 @@ fun saveImage(context: Context, bitmap: Bitmap?, fileName: String) {
     val imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
     val outputStream: OutputStream? = imageUri?.let { resolver.openOutputStream(it) }
     outputStream?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
+    Toast.makeText(context, "Image Saved Successfully", Toast.LENGTH_SHORT).show()
 }
 
 fun compressImage(context: Context, bitmap: Bitmap?, fileName: String) {
@@ -344,6 +372,7 @@ fun compressImage(context: Context, bitmap: Bitmap?, fileName: String) {
     val imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
     val outputStream: OutputStream? = imageUri?.let { resolver.openOutputStream(it) }
     outputStream?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 50, it) }
+    Toast.makeText(context, "Image Compressed Successfully", Toast.LENGTH_SHORT).show()
 }
 
 suspend fun saveAllImages(context: Context, bitmaps: List<PhotosItem?>, fileNamePrefix: String) {
@@ -357,6 +386,9 @@ suspend fun saveAllImages(context: Context, bitmaps: List<PhotosItem?>, fileName
             }
         }
     }
+
+    Toast.makeText(context, "Images Saved Successfully", Toast.LENGTH_SHORT).show()
+
 }
 
 suspend fun compressAllImages(context: Context, bitmaps: List<PhotosItem?>, fileNamePrefix: String) {
@@ -370,6 +402,7 @@ suspend fun compressAllImages(context: Context, bitmaps: List<PhotosItem?>, file
             }
         }
     }
+    Toast.makeText(context, "Images Compressed Successfully", Toast.LENGTH_SHORT).show()
 }
 
 suspend fun getBitmapFromUrl(context: Context, imageUrl: String): Bitmap? {

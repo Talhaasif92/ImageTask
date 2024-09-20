@@ -59,7 +59,6 @@ fun ApiScreen(imageViewModel: ImageViewModel, navController: NavHostController) 
             modifier = Modifier.fillMaxSize()
         )
     } else {
-        // Once loaded, display the images in a grid with clickable functionality
         ImageList(
             images = images,
             onImageClick = {
@@ -116,7 +115,7 @@ fun ImageList(
                             .fillMaxWidth()
                             .wrapContentHeight()
                             .clickable {
-                                val imageIndex = images.indexOf(photo) // Get index of clicked image
+                                val imageIndex = images.indexOf(photo)
                                 onImageClick(imageIndex)
                             }
                     )
