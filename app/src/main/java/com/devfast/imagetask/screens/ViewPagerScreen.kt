@@ -60,7 +60,7 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
         onResult = { isGranted: Boolean ->
             if (isGranted) {
                 filteredImage?.let {
-                    saveImage(context, it, "FilteredImage_${currentIndex + 1}.jpg")
+                    imageViewModel.saveImage(context, it, "FilteredImage_${currentIndex + 1}.jpg")
                 }
             } else {
                 Toast.makeText(context, "Permission denied, cannot save image", Toast.LENGTH_SHORT).show()
@@ -156,7 +156,7 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                 LaunchedEffect(selectedFilter, images[page]) {
                     if (filteredImage == null || page != currentIndex) {
                         Log.d("showData", "show data")
-                        filteredImage = applyFilter(
+                        filteredImage =  imageViewModel.applyFilter(
                             context = context,
                             imageUrl = images[page]?.src?.original,
                             filterType = selectedFilter
@@ -204,10 +204,10 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                         coroutineScope.launch {
                             // Use filteredImage if a filter is applied, else use the original image
                             val bitmapToSave = filteredImage ?: images[currentIndex]?.src?.original?.let {
-                                getBitmapFromUrl(context, it)
+                                imageViewModel.getBitmapFromUrl(context, it)
                             }
                             bitmapToSave?.let {
-                                saveImage(context, it, "Image_${currentIndex + 1}.jpg")
+                                imageViewModel.saveImage(context, it, "Image_${currentIndex + 1}.jpg")
                             } ?: Toast.makeText(context, "Image not found", Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -229,10 +229,10 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                     coroutineScope.launch {
                         // Use filteredImage if a filter is applied, else use the original image
                         val bitmapToCompress = filteredImage ?: images[currentIndex]?.src?.original?.let {
-                            getBitmapFromUrl(context, it)
+                            imageViewModel.getBitmapFromUrl(context, it)
                         }
                         bitmapToCompress?.let {
-                            compressImage(context, it, "CompressedImage_${currentIndex + 1}.jpg")
+                            imageViewModel.compressImage(context, it, "CompressedImage_${currentIndex + 1}.jpg")
                         } ?: Toast.makeText(context, "Image not found", Toast.LENGTH_SHORT).show()
                     }
                 },
@@ -260,12 +260,12 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                             images.forEachIndexed { index, imageItem ->
                                 // Handle each image in the list, saving either filteredImage or original image
                                 val bitmapToSave = filteredImage ?: imageItem?.src?.original?.let {
-                                    getBitmapFromUrl(context, it)
+                                    imageViewModel.getBitmapFromUrl(context, it)
                                 }
 
                                 // Save the bitmap if it exists
                                 bitmapToSave?.let {
-                                    saveAllImages(context, it, "FilteredImage_${index + 1}.jpg")
+                                    imageViewModel.saveImage(context, it, "FilteredImage_${index + 1}.jpg")
                                 } ?: Toast.makeText(context, "Image not found at index $index", Toast.LENGTH_SHORT).show()
                             }
                         }
@@ -289,12 +289,12 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                         images.forEachIndexed { index, imageItem ->
                             // Handle each image in the list, compressing either filteredImage or original image
                             val bitmapToCompress = filteredImage ?: imageItem?.src?.original?.let {
-                                getBitmapFromUrl(context, it)
+                                imageViewModel.getBitmapFromUrl(context, it)
                             }
 
                             // Compress the bitmap if it exists
                             bitmapToCompress?.let {
-                                compressImage(context, it, "CompressedImage_${index + 1}.jpg")
+                                imageViewModel.compressImage(context, it, "CompressedImage_${index + 1}.jpg")
                             } ?: Toast.makeText(context, "Image not found at index $index", Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -314,139 +314,4 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
         }
 
     }
-}
-// Cache to store previously filtered images
-val imageCache = mutableMapOf<Pair<String?, String>, Bitmap?>()
-
-suspend fun applyFilter(context: Context, imageUrl: String?, filterType: String): ImageBitmap {
-    // Check cache first to avoid reprocessing the image with the same filter
-    val cacheKey = Pair(imageUrl, filterType)
-    imageCache[cacheKey]?.let {
-        return it.asImageBitmap() // Return cached image if already processed
-    }
-
-    val loader = ImageLoader(context)
-    val request = ImageRequest.Builder(context)
-        .data(imageUrl)
-        .build()
-
-    val result = (loader.execute(request) as SuccessResult).drawable
-    val bitmap = (result as android.graphics.drawable.BitmapDrawable).bitmap
-
-    val filteredBitmap = withContext(Dispatchers.Default) {
-        when (filterType) {
-            "Sepia" -> applySepiaFilter(bitmap)
-            "Grayscale" -> applyGrayscaleFilter(bitmap)
-            "Vintage" -> applyVintageFilter(bitmap)
-            else -> bitmap
-        }
-    }
-
-    // Store the processed image in the cache for future reuse
-    imageCache[cacheKey] = filteredBitmap
-
-    return filteredBitmap.asImageBitmap()
-}
-
-
-fun applySepiaFilter(source: Bitmap): Bitmap {
-    val sepiaMatrix = ColorMatrix().apply {
-        setScale(1f, 0.95f, 0.82f, 1f)
-    }
-    return applyColorMatrixFilter(source, sepiaMatrix)
-}
-
-fun applyGrayscaleFilter(source: Bitmap): Bitmap {
-    val grayscaleMatrix = ColorMatrix().apply {
-        setSaturation(0f)
-    }
-    return applyColorMatrixFilter(source, grayscaleMatrix)
-}
-
-fun applyVintageFilter(source: Bitmap): Bitmap {
-    val vintageMatrix = ColorMatrix().apply {
-        setScale(1f, 0.9f, 0.75f, 1f)
-    }
-    return applyColorMatrixFilter(source, vintageMatrix)
-}
-
-fun applyColorMatrixFilter(source: Bitmap, colorMatrix: ColorMatrix): Bitmap {
-    val softwareBitmap = source.copy(Bitmap.Config.ARGB_8888, true)
-
-    val filteredBitmap = Bitmap.createBitmap(softwareBitmap.width, softwareBitmap.height, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(filteredBitmap)
-    val paint = Paint().apply {
-        colorFilter = ColorMatrixColorFilter(colorMatrix)
-    }
-    canvas.drawBitmap(softwareBitmap, 0f, 0f, paint)
-    return filteredBitmap
-}
-
-fun saveImage(context: Context, bitmap: Bitmap?, fileName: String) {
-    if (bitmap == null) return
-    val resolver = context.contentResolver
-    val contentValues = ContentValues().apply {
-        put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-        put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
-    }
-
-    val imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-    val outputStream: OutputStream? = imageUri?.let { resolver.openOutputStream(it) }
-    outputStream?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
-    Toast.makeText(context, "Image Saved Successfully", Toast.LENGTH_SHORT).show()
-}
-
-fun compressImage(context: Context, bitmap: Bitmap?, fileName: String) {
-    if (bitmap == null) return
-    val resolver = context.contentResolver
-    val contentValues = ContentValues().apply {
-        put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-        put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
-    }
-
-    val imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-    val outputStream: OutputStream? = imageUri?.let { resolver.openOutputStream(it) }
-    outputStream?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 50, it) }
-    Toast.makeText(context, "Image Compressed Successfully", Toast.LENGTH_SHORT).show()
-}
-
-suspend fun saveAllImages(context: Context, bitmaps: List<PhotosItem?>, fileNamePrefix: String) {
-    bitmaps.forEachIndexed { index, photosItem ->
-        val imageUrl = photosItem?.src?.original
-        if (imageUrl != null) {
-            val bitmap = getBitmapFromUrl(context, imageUrl)
-            if (bitmap != null) {
-                val fileName = "${fileNamePrefix}_$index.jpg"
-                saveImage(context, bitmap, fileName)
-            }
-        }
-    }
-
-    Toast.makeText(context, "Images Saved Successfully", Toast.LENGTH_SHORT).show()
-
-}
-
-suspend fun compressAllImages(context: Context, bitmaps: List<PhotosItem?>, fileNamePrefix: String) {
-    bitmaps.forEachIndexed { index, photosItem ->
-        val imageUrl = photosItem?.src?.original
-        if (imageUrl != null) {
-            val bitmap = getBitmapFromUrl(context, imageUrl)
-            if (bitmap != null) {
-                val fileName = "${fileNamePrefix}_$index.jpg"
-                compressImage(context, bitmap, fileName)
-            }
-        }
-    }
-    Toast.makeText(context, "Images Compressed Successfully", Toast.LENGTH_SHORT).show()
-}
-
-suspend fun getBitmapFromUrl(context: Context, imageUrl: String): Bitmap? {
-    val loader = ImageLoader(context)
-    val request = ImageRequest.Builder(context)
-        .data(imageUrl)
-        .build()
-    val result = (loader.execute(request) as SuccessResult).drawable
-    return (result as? android.graphics.drawable.BitmapDrawable)?.bitmap
 }

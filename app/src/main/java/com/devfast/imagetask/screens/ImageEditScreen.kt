@@ -2,6 +2,7 @@ package com.devfast.imagetask.screens
 
 import android.graphics.Bitmap
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,31 +37,29 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+
 @Composable
 fun ImageEditScreen(
     navController: NavHostController,
     imageViewModel: ImageViewModel,
     filePath: String?
 ) {
-
     var selectedFilter by remember { mutableStateOf("None") }
     var filteredImage by remember { mutableStateOf<Bitmap?>(null) }
     val context = LocalContext.current
-    // Get CoroutineScope
     val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp), // Add padding for overall layout
-        verticalArrangement = Arrangement.SpaceBetween // Space out the components
+            .padding(16.dp),
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Filter buttons at the top
+        // Filter buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            // Filter buttons (No-Filter, Sepia, etc.)
             Button(
                 onClick = { selectedFilter = "None" },
                 modifier = Modifier
@@ -68,12 +67,7 @@ fun ImageEditScreen(
                     .padding(horizontal = 4.dp)
                     .height(40.dp)
             ) {
-                Text(
-                    "No-Filter",
-                    maxLines = 1, // Limit to one line
-                    softWrap = true,
-                    style = TextStyle(fontSize = 12.sp) // Set a base text size
-                )
+                Text("No-Filter", maxLines = 1, softWrap = true, style = TextStyle(fontSize = 12.sp))
             }
             Button(
                 onClick = { selectedFilter = "Sepia" },
@@ -82,12 +76,7 @@ fun ImageEditScreen(
                     .padding(horizontal = 4.dp)
                     .height(40.dp)
             ) {
-                Text(
-                    "Sepia",
-                    maxLines = 1,
-                    softWrap = true,
-                    style = TextStyle(fontSize = 12.sp)
-                )
+                Text("Sepia", maxLines = 1, softWrap = true, style = TextStyle(fontSize = 12.sp))
             }
             Button(
                 onClick = { selectedFilter = "Grayscale" },
@@ -96,12 +85,7 @@ fun ImageEditScreen(
                     .padding(horizontal = 4.dp)
                     .height(40.dp)
             ) {
-                Text(
-                    "Grayscale",
-                    maxLines = 1,
-                    softWrap = true,
-                    style = TextStyle(fontSize = 12.sp)
-                )
+                Text("Grayscale", maxLines = 1, softWrap = true, style = TextStyle(fontSize = 12.sp))
             }
             Button(
                 onClick = { selectedFilter = "Vintage" },
@@ -110,43 +94,42 @@ fun ImageEditScreen(
                     .padding(horizontal = 4.dp)
                     .height(40.dp)
             ) {
-                Text(
-                    "Vintage",
-                    maxLines = 1,
-                    softWrap = true,
-                    style = TextStyle(fontSize = 12.sp)
-                )
+                Text("Vintage", maxLines = 1, softWrap = true, style = TextStyle(fontSize = 12.sp))
             }
         }
 
         // Card displaying the filtered image
         Card(
             modifier = Modifier
-                .weight(1f) // Allow the image to take up available space
+                .weight(1f)
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
         ) {
-
-
             LaunchedEffect(selectedFilter) {
-
-                Log.d("showData", "show data")
-                filteredImage = applyFilter(
+                filteredImage = imageViewModel.applyFilter(
                     context = context,
                     imageUrl = filePath,
                     filterType = selectedFilter
-                ).asAndroidBitmap()
+                )?.asAndroidBitmap()
             }
-
 
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
             ) {
-                if (filePath != null) {
-                    AsyncImage(
-                        model = filteredImage,
+                if (filteredImage != null) {
+                    // Use Image from androidx.compose.foundation for ImageBitmap
+                    Image(
+                        bitmap = filteredImage!!.asImageBitmap(),
                         contentDescription = "Filtered Image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else if (filePath != null) {
+                    // Use AsyncImage from Coil for file paths
+                    AsyncImage(
+                        model = filePath,
+                        contentDescription = "Original Image",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -154,7 +137,9 @@ fun ImageEditScreen(
                     Text("No image selected", modifier = Modifier.align(Alignment.Center))
                 }
             }
+
         }
+
         // Buttons for Save and Compress at the bottom
         Row(
             modifier = Modifier
@@ -164,8 +149,9 @@ fun ImageEditScreen(
         ) {
             Button(
                 onClick = {
-                    filteredImage?.let {
-                        saveImage(context, it, "Edit_${createImageFileName()}.jpg")
+                    val imageToSave = filteredImage ?: imageViewModel.loadOriginalImage(context, filePath)
+                    imageToSave?.let {
+                        imageViewModel.saveImage(context, it, "Edit_${createImageFileName()}.jpg")
                     }
                 },
                 modifier = Modifier
@@ -177,9 +163,9 @@ fun ImageEditScreen(
 
             Button(
                 onClick = {
-                    filteredImage?.let {
-                        val file = createImageFile(context)
-                        compressImage(context, it, "Edit_${createImageFileName()}.jpg")
+                    val imageToCompress = filteredImage ?: imageViewModel.loadOriginalImage(context, filePath)
+                    imageToCompress?.let {
+                        imageViewModel.compressImage(context, it, "Edit_${createImageFileName()}.jpg")
                     }
                 },
                 modifier = Modifier
@@ -190,10 +176,9 @@ fun ImageEditScreen(
             }
         }
     }
-
 }
 
 fun createImageFileName(): String {
     val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-    return "IMG_$timeStamp"  // Shorter file name based on timestamp
+    return "IMG_$timeStamp"
 }
