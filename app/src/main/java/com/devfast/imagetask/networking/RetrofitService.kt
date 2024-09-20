@@ -10,7 +10,8 @@ interface RetrofitService {
     @GET(EP_SEARCH_RESULT)
     suspend fun searchPhotos(
         @Query("query") query: String,
-        @Query("per_page") perPage: Int
+        @Query("per_page") perPage: Int,
+        @Query("page") page: Int
     ): Response<ImageResponse>
 
 }

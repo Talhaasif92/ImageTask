@@ -4,11 +4,15 @@ package com.devfast.imagetask.navigation
 import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -20,6 +24,7 @@ import com.devfast.imagetask.ImageViewModel
 import com.devfast.imagetask.screens.ApiScreen
 import com.devfast.imagetask.screens.CameraScreen
 import com.devfast.imagetask.screens.ImageEditScreen
+import com.devfast.imagetask.screens.ImageListScreen
 import com.devfast.imagetask.screens.SavedImageScreen
 import com.devfast.imagetask.screens.StorageScreen
 import com.devfast.imagetask.screens.ViewPagerScreen
@@ -35,15 +40,23 @@ fun ImageNavigation(
         ImageNavigationActions(navController)
     }
 
-    Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
-        val isShowBottomNvBar = selectedDestination == Screen.ApiScreen.route || selectedDestination == Screen.CameraScreen.route || selectedDestination == Screen.StorageScreen.route || selectedDestination == Screen.SaveImageScreen.route
-        if(isShowBottomNvBar) BottomNavigationBar(
-            selectedDestination = selectedDestination,
-            navigateToTopLevelDestination = navigationActions::navigateTo
-        )
-        BottomNavHost(
-            navController = navController, modifier = Modifier.weight(1f)
-        )
+    Scaffold { innerPadding ->
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+        ) {
+            BottomNavHost(
+                navController = navController,
+                modifier = Modifier.weight(1f)
+            )
+            val isShowBottomNvBar = selectedDestination == Screen.ApiScreen.route || selectedDestination== Screen.CameraScreen.route || selectedDestination == Screen.StorageScreen.route || selectedDestination == Screen.SaveImageScreen.route
+            if (isShowBottomNvBar) {
+                BottomNavigationBar(
+                    selectedDestination = selectedDestination,
+                    navigateToTopLevelDestination = navigationActions::navigateTo
+                )
+            }
+        }
     }
 }
 
@@ -64,6 +77,14 @@ private fun BottomNavHost(
             StorageScreen(imageViewModel = imageViewModel, navController = navController)
         }
 
+
+        composable(
+            route = Screen.ImageListScreen.route + "/{folderPath}",
+            arguments = listOf(navArgument("folderPath") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val folderPath = Uri.decode(backStackEntry.arguments?.getString("folderPath") ?: "")
+            ImageListScreen(folderPath = folderPath ?: "", navController = navController)
+        }
         composable(Screen.CameraScreen.route) {
             CameraScreen(imageViewModel = imageViewModel, navController = navController)
         }
@@ -85,5 +106,7 @@ private fun BottomNavHost(
             val filePath = Uri.decode(backStackEntry.arguments?.getString("filePath") ?: "")
             ImageEditScreen(imageViewModel = imageViewModel, navController = navController, filePath = filePath ?: "")
         }
+
+
     }
 }

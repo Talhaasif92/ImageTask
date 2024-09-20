@@ -12,6 +12,11 @@ sealed class Screen(val route: String) {
     data object SaveImageScreen : Screen("SaveImageScreen")
     data object ViewPagerScreen : Screen("ViewPagerScreen")
     data object ImageEditScreen : Screen("ImageEditScreen")
+    data object ImageListScreen : Screen("image_list_screen/{folderPath}") {
+        fun passFolderPath(folderPath: String): String {
+            return "image_list_screen/$folderPath"
+        }
+    }
 }
 
 class ImageNavigationActions(private val navController: NavHostController) {

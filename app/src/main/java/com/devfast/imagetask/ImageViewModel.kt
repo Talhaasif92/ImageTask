@@ -41,11 +41,11 @@ class ImageViewModel : ViewModel() {
 
 
     // Fetch images from the API
-    fun fetchImages(query: String = "house") {
+    fun fetchImages(query: String = "house", perPage: Int = 80,page: Int = 1) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = ImageApiClient.imageService.searchPhotos(query, 80)
+                val response = ImageApiClient.imageService.searchPhotos(query, perPage, page = page)
                 val imageUris = response.body()?.photos
 
                 if (imageUris != null) {

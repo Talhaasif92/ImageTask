@@ -196,14 +196,20 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
         ) {
             Button(
                 onClick = {
-
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
                         ContextCompat.checkSelfPermission(context, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
                         permissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     } else {
-                        filteredImage?.let {
-                            saveImage(context, it, "FilteredImage_${currentIndex + 1}.jpg")
+                        coroutineScope.launch {
+                            val bitmapToSave = filteredImage ?: images[currentIndex]?.src?.original?.let {
+                                getBitmapFromUrl(context,
+                                    it
+                                )
+                            }
+                            bitmapToSave?.let {
+                                saveImage(context, it, "Image_${currentIndex + 1}.jpg")
+                            } ?: Toast.makeText(context, "Image not found", Toast.LENGTH_SHORT).show()
                         }
                     }
                 },
@@ -218,6 +224,7 @@ fun ViewPagerScreen(navController: NavHostController, imageViewModel: ImageViewM
                     style = TextStyle(fontSize = 12.sp) // Adjust as necessary
                 )
             }
+
             Button(
                 onClick = {
                     filteredImage?.let {
