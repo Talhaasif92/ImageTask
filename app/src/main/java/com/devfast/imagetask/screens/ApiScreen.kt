@@ -44,11 +44,8 @@ import com.devfast.imagetask.navigation.Screen
 fun ApiScreen(imageViewModel: ImageViewModel, navController: NavHostController) {
     val images = imageViewModel.images.collectAsState().value
     var isLoading by remember { mutableStateOf(false) }
-
-    // Display initial skeleton grid while waiting for images
     val skeletonCount = 12
 
-    // Trigger loading when images are being fetched
     LaunchedEffect(images) {
         isLoading = images.isEmpty()
     }
@@ -56,19 +53,18 @@ fun ApiScreen(imageViewModel: ImageViewModel, navController: NavHostController) 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(8.dp) // Adds padding around the column
+            .padding(8.dp)
     ) {
-        // Show the TextField first, regardless of the loading state
+
         ImageSearchBar(
             onSearchImage = { query ->
-                isLoading = true // Show loader when search starts
+                isLoading = true
                 imageViewModel.fetchImages(query)
             }
         )
 
-        Spacer(modifier = Modifier.height(8.dp)) // Adds space between the search bar and the list
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Show skeleton or loader while waiting
         if (isLoading) {
             SkeletonImageList(skeletonCount)
         } else {
@@ -123,7 +119,7 @@ fun ImageSearchBar(onSearchImage: (String) -> Unit) {
         keyboardActions = KeyboardActions(
             onSearch = {
                 onSearchImage(searchQuery)
-                searchQuery = "" // Clear search field after the search
+                searchQuery = ""
             }
         )
     )
@@ -141,9 +137,9 @@ fun ImageList(
         content = {
             items(images) { photo ->
                 AsyncImage(
-                    model = photo?.src?.medium ?: photo?.src?.small, // Fetch smaller image if available
-                    placeholder = painterResource(id = R.drawable.loading_image), // Show placeholder while loading
-                    error = painterResource(id = R.drawable.image_error), // Show error image if loading fails
+                    model = photo?.src?.medium ?: photo?.src?.small,
+                    placeholder = painterResource(id = R.drawable.loading_image),
+                    error = painterResource(id = R.drawable.image_error),
                     contentScale = ContentScale.Crop,
                     contentDescription = null,
                     modifier = Modifier

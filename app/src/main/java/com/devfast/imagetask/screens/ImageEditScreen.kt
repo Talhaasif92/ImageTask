@@ -55,7 +55,6 @@ fun ImageEditScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Filter buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -98,7 +97,6 @@ fun ImageEditScreen(
             }
         }
 
-        // Card displaying the filtered image
         Card(
             modifier = Modifier
                 .weight(1f)
@@ -110,7 +108,7 @@ fun ImageEditScreen(
                     context = context,
                     imageUrl = filePath,
                     filterType = selectedFilter
-                )?.asAndroidBitmap()
+                ).asAndroidBitmap()
             }
 
             Box(
@@ -118,7 +116,6 @@ fun ImageEditScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 if (filteredImage != null) {
-                    // Use Image from androidx.compose.foundation for ImageBitmap
                     Image(
                         bitmap = filteredImage!!.asImageBitmap(),
                         contentDescription = "Filtered Image",
@@ -126,7 +123,6 @@ fun ImageEditScreen(
                         contentScale = ContentScale.Crop
                     )
                 } else if (filePath != null) {
-                    // Use AsyncImage from Coil for file paths
                     AsyncImage(
                         model = filePath,
                         contentDescription = "Original Image",
@@ -140,7 +136,6 @@ fun ImageEditScreen(
 
         }
 
-        // Buttons for Save and Compress at the bottom
         Row(
             modifier = Modifier
                 .fillMaxWidth()

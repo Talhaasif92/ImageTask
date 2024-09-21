@@ -38,23 +38,7 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun SavedImageScreen(imageViewModel: ImageViewModel, navController: NavHostController) {
-    // Collecting images from the StateFlow
-//    val savedImages = imageViewModel.images.collectAsState().value
-//
-//    Column(modifier = Modifier.padding(16.dp)) {
-//        LazyColumn {
-//            items(savedImages.filterNotNull()) { photoItem ->
-//                Image(
-//                    painter = rememberImagePainter(photoItem.src?.landscape), // Adjust this according to your PhotosItem
-//                    contentDescription = null,
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(200.dp)
-//                        .padding(bottom = 8.dp)
-//                )
-//            }
-//        }
-//    }
+
     val context = LocalContext.current
     val galleryImages = remember { mutableStateListOf<String>() }
 
@@ -92,7 +76,7 @@ fun SavedImageScreen(imageViewModel: ImageViewModel, navController: NavHostContr
 fun loadGalleryImages(contentResolver: ContentResolver): List<String> {
     val images = mutableListOf<String>()
     val projection = arrayOf(
-        MediaStore.Images.Media.DATA, // Use _DATA for the file path
+        MediaStore.Images.Media.DATA,
         MediaStore.Images.Media.DATE_ADDED
     )
     val cursor = contentResolver.query(
@@ -117,12 +101,10 @@ fun ImageThumbnail(imageUrl: String, onClick: () -> Unit) {
     val context = LocalContext.current
     var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
 
-    // Load the image using Coil
     LaunchedEffect(imageUrl) {
         bitmap = loadImageBitmap(context, imageUrl)
     }
 
-    // Display the image or a placeholder if not loaded yet
     if (bitmap != null) {
         Image(
             bitmap = bitmap!!.asImageBitmap(),
